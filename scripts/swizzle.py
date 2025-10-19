@@ -26,4 +26,13 @@ print(len(s1), len(s2))
 print(len(s3), len(s4))
 print(s3)
 
+smem_stride = 16
 
+for tx in range(32):
+   logical_offset = (tx % 32) * smem_stride
+   swizzled_offset = logical_offset ^ ((logical_offset & 0b10000000) >> 4)
+   sw_inter = swizzled_offset 
+   swizzled_offset = swizzled_offset ^ ((swizzled_offset & 0b1100000) >> 2)
+   if sw_inter != logical_offset:
+      print(f"{tx:02d}", f"{logical_offset:04d}", f"{sw_inter:04d}", f"{swizzled_offset:04d}", 
+            f"{logical_offset:016b}", f"{sw_inter:016b}", f"{swizzled_offset:016b}" )
