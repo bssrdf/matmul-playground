@@ -10,11 +10,15 @@ def int_log2(x):
 
 def swizzle(nrow, ntx, NTHREADS, BK):
    print(int_log2(nrow))
-   SWIZZLE_BITS_A = int_log2(nrow) + 2
-   
-   bit_move = SWIZZLE_BITS_A - int_log2(32//(BK//4)) 
-   # bit_move = 3
-   bitmask = ((1 << (BK//4-1)) - 1) << SWIZZLE_BITS_A
+   # SWIZZLE_BITS_A = int_log2(nrow) + 2   
+   # bit_move = SWIZZLE_BITS_A - int_log2(32//(BK//4)) 
+   # bit_move = SWIZZLE_BITS_A - 3
+   # bitmask = ((1 << (BK//4-1)) - 1) << SWIZZLE_BITS_A
+
+   SWIZZLE_BITS_A = int_log2(nrow)
+   # bit_move = SWIZZLE_BITS_A - int_log2(32//(BK//4)) 
+   bit_move = SWIZZLE_BITS_A - 3
+   bitmask = ((1 << (3)) - 1) << SWIZZLE_BITS_A
 
    print(f"{bitmask:016b}", bit_move)
    for i in range(0, 8):
@@ -31,44 +35,49 @@ def swizzle(nrow, ntx, NTHREADS, BK):
       # idx  = tx % (BK//4) * 4 * nrow + rowStrideA + tx // 2 
       idx  = tx % (BK//4) * 4 * nrow + 0 + tx // (BK//4) 
       idx_s = idx ^ ( (idx & bitmask) >> bit_move)
-      s1.add(idx)
-      s2.add(idx_s)
-      if tx % 2 > 0:
-         if tx < 64:
-            s3.add(idx_s %32)
-         else:
-            s4.add(idx_s %32)  
-      if tx % 2 == 0:
-         b1.append(idx_s % 32)
-      else:
-         b2.append(idx_s % 32)  
+      idx1  = tx % (BK//4) * 4 * nrow + nrow + tx // (BK//4) 
+      idx1_s = idx1 ^ ( (idx1 & bitmask) >> bit_move)
+      # s1.add(idx)
+      # s2.add(idx_s)
+      # if tx % 2 > 0:
+      #    if tx < 64:
+      #       s3.add(idx_s %32)
+      #    else:
+      #       s4.add(idx_s %32)  
+      # if tx % 2 == 0:
+      #    b1.append(idx_s % 32)
+      # else:
+      #    b2.append(idx_s % 32)  
       print(f"{tx:02d}", ":", f"{idx:016b}", f"{idx:04d}", f"{idx_s:016b}", f"{idx_s:04d}", f"{idx % 32:02d}", f"{idx_s % 32:02d}", idx_s // nrow)
+      # print(f"{tx:02d}", ":", f"{idx:016b}", f"{idx:04d}", f"{idx_s:016b}", f"{idx_s:04d}", f"{idx_s % 32:02d}", f"{idx_s//nrow:01d}", 
+      #       f"{idx1:016b}", f"{idx1:04d}", f"{idx1_s:016b}", f"{idx1_s:04d}", f"{idx1_s % 32:02d}", f"{idx1_s//nrow:01d}")
 
-   print(len(s1), len(s2))
+   # print(len(s1), len(s2))
 
-   print(len(s3), len(s4))
-   # print(s3)
-   print(b1)
-   print(b2)
-   tx = 1
-   for i in range(8):
-   # for idx in range(nrow, nrow+32):
-      # idx  = tx % (BK//4) * 4 * nrow + rowStrideA + tx // 2 
-      idx  = tx % (BK//4) * 4 * nrow + 0 + tx // (BK//4) + i
-      idx_s = idx ^ ( (idx & bitmask) >> bit_move)      
-      print(f"{idx:016b}", f"{idx:04d}", f"{idx_s:016b}", f"{idx_s:04d}", f"{idx % 32:02d}", f"{idx_s % 32:02d}")
+   # print(len(s3), len(s4))
+   # # print(s3)
+   # print(b1)
+   # print(b2)
+   # tx = 1
+   # for i in range(8):
+   # # for idx in range(nrow, nrow+32):
+   #    # idx  = tx % (BK//4) * 4 * nrow + rowStrideA + tx // 2 
+   #    idx  = tx % (BK//4) * 4 * nrow + 0 + tx // (BK//4) + i
+   #    idx_s = idx ^ ( (idx & bitmask) >> bit_move)      
+   #    print(f"{idx:016b}", f"{idx:04d}", f"{idx_s:016b}", f"{idx_s:04d}", f"{idx % 32:02d}", f"{idx_s % 32:02d}")
 # swizzle(128, 128, 0b1110000000)
 # swizzle(128, 256, 0b1000000000, 5)
 # swizzle(128, 256, 256, 16, 0b11000000000, 6)
 
 # swizzle(128, 256, 256, 8)
+# swizzle(128, 32, 256, 8)
 # swizzle(128, 256, 256, 16)
 # swizzle(64, 128,    0b0100000000, 4)
 # swizzle(32, 64, 0b10000000, 3)
 
 # swizzle(64, 128, 0b111000000)
 # swizzle(32, 64, 0b11100000)
-print(int_log2(16))
+# print(int_log2(16))
 WARPSIZE = 32
 
 def swizzle2(ntx, WM, WN, WNITER, TM, TN, bitmask, bit_move):
@@ -110,6 +119,43 @@ def swizzle2(ntx, WM, WN, WNITER, TM, TN, bitmask, bit_move):
 
 
 
-swizzle2(32, 64, 32, 2, 4, 4, 0b0110000000, 7)
+# swizzle2(32, 64, 32, 2, 4, 4, 0b0110000000, 7)
 
 
+def swizzle3(ntx, BK):
+   
+   for tx in range(ntx):
+      idx = tx // 4 * 4 * BK + tx % 4 * BK 
+      idx_s = idx ^ ( (idx & 0b00011100000) >> 5)
+      idx1 = tx // 4 * 4 * BK + tx % 4 * BK + 1; 
+      idx1_s = idx1 ^ ( (idx1 & 0b00011100000) >> 5)
+      idx_s1 = idx_s ^ 1
+      idx2 = tx // 4 * 4 * BK + tx % 4 * BK + 2; 
+      idx2_s = idx2 ^ ( (idx2 & 0b00011100000) >> 5)
+      idx_s2 = idx_s1 ^ 3
+      idx3 = tx // 4 * 4 * BK + tx % 4 * BK + 3; 
+      idx3_s = idx3 ^ ( (idx3 & 0b00011100000) >> 5)
+      idx_s3 = idx_s2 ^ 1
+      idx4 = tx // 4 * 4 * BK + tx % 4 * BK + 4; 
+      idx4_s = idx4 ^ ( (idx4 & 0b00011100000) >> 5)
+      idx_s4 = idx_s3 ^ 7
+      idx5 = tx // 4 * 4 * BK + tx % 4 * BK + 5; 
+      idx5_s = idx5 ^ ( (idx5 & 0b00011100000) >> 5)
+      idx_s5 = idx_s4 ^ 1
+      idx6 = tx // 4 * 4 * BK + tx % 4 * BK + 6; 
+      idx6_s = idx6 ^ ( (idx6 & 0b00011100000) >> 5)
+      idx_s6 = idx_s5 ^ 3
+      idx7 = tx // 4 * 4 * BK + tx % 4 * BK + 7; 
+      idx7_s = idx7 ^ ( (idx7 & 0b00011100000) >> 5)
+      idx_s7 = idx_s6 ^ 1
+      # print(f"{tx:02d}", f"{idx:016b}", f"{idx:03d}", f"{idx_s:016b}", f"{idx_s:03d}", f"{idx % 32:02d}", f"{idx_s % 32:02d}",
+      #       f"{idx_s1:016b}", f"{idx_s1:03d}", f"{idx_s1 % 32:02d}")
+      # print(f"{tx:02d}", f"{idx1_s:016b}", f"{idx1_s:03d}", f"{idx1_s % 32:02d}", f"{idx_s1:016b}", f"{idx_s1:03d}", f"{idx_s1 % 32:02d}")
+      # print(f"{tx:02d}", f"{idx2_s:016b}", f"{idx2_s:03d}", f"{idx2_s % 32:02d}", f"{idx_s2:016b}", f"{idx_s2:03d}", f"{idx_s2 % 32:02d}")
+      # print(f"{tx:02d}", f"{idx3_s:016b}", f"{idx3_s:03d}", f"{idx3_s % 32:02d}", f"{idx_s3:016b}", f"{idx_s3:03d}", f"{idx_s3 % 32:02d}")
+      # print(f"{tx:02d}", f"{idx4_s:016b}", f"{idx4_s:03d}", f"{idx4_s % 32:02d}", f"{idx_s4:016b}", f"{idx_s4:03d}", f"{idx_s4 % 32:02d}")
+      # print(f"{tx:02d}", f"{idx5_s:016b}", f"{idx5_s:03d}", f"{idx5_s % 32:02d}", f"{idx_s5:016b}", f"{idx_s5:03d}", f"{idx_s5 % 32:02d}")
+      # print(f"{tx:02d}", f"{idx6_s:016b}", f"{idx6_s:03d}", f"{idx6_s % 32:02d}", f"{idx_s6:016b}", f"{idx_s6:03d}", f"{idx_s6 % 32:02d}")
+      print(f"{tx:02d}", f"{idx7_s:016b}", f"{idx7_s:03d}", f"{idx7_s % 32:02d}", f"{idx_s7:016b}", f"{idx_s7:03d}", f"{idx_s7 % 32:02d}")
+
+swizzle3(32, 8)
