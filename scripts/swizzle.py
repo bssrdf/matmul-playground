@@ -123,7 +123,6 @@ def swizzle2(ntx, WM, WN, WNITER, TM, TN, bitmask, bit_move):
 
 smem_stride = 16
 
-<<<<<<< HEAD
 for tx in range(32):
    logical_offset = (tx % 32) * smem_stride
    swizzled_offset = logical_offset ^ ((logical_offset & 0b10000000) >> 4)
@@ -132,7 +131,6 @@ for tx in range(32):
    if sw_inter != logical_offset:
       print(f"{tx:02d}", f"{logical_offset:04d}", f"{sw_inter:04d}", f"{swizzled_offset:04d}", 
             f"{logical_offset:016b}", f"{sw_inter:016b}", f"{swizzled_offset:016b}" )
-=======
 def swizzle3(ntx, BK):
    
    for tx in range(ntx):
@@ -204,4 +202,3 @@ def swizzle5(ntx, smem_stride):
             f"{swizzled_offset:04d}", f"{swizzled_offset//8:03d}", f"{swizzled_offset:016b}")
 
 swizzle5(32, 32)
->>>>>>> 6cbaf461d1d6dfb04738443c56ccdd0a4bc85459
