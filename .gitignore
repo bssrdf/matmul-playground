@@ -1,0 +1,6 @@
+*.exe
+build/
+*.ncu-rep
+*.exp
+*.lib
+*.txt

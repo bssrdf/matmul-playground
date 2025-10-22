@@ -158,4 +158,38 @@ def swizzle3(ntx, BK):
       # print(f"{tx:02d}", f"{idx6_s:016b}", f"{idx6_s:03d}", f"{idx6_s % 32:02d}", f"{idx_s6:016b}", f"{idx_s6:03d}", f"{idx_s6 % 32:02d}")
       print(f"{tx:02d}", f"{idx7_s:016b}", f"{idx7_s:03d}", f"{idx7_s % 32:02d}", f"{idx_s7:016b}", f"{idx_s7:03d}", f"{idx_s7 % 32:02d}")
 
-swizzle3(32, 8)
+# swizzle3(32, 8)
+
+def swizzle4(ntx, BM):
+   SWIZZLE_MASK_1 = 0b10000
+   SWIZZLE_BITS_1 = 4
+   SWIZZLE_MASK_2 = 0b1100
+   SWIZZLE_BITS_2 = 2
+   TILE_COLS_VECTORIZED = 4
+   ROW_STEP = ntx // TILE_COLS_VECTORIZED
+   NUM_ITERS = BM // ROW_STEP
+   thread_row = [0]*ntx
+   thread_col = [0]*ntx
+   for tx in range(ntx):
+      thread_row[tx] = tx // TILE_COLS_VECTORIZED
+      thread_col[tx] = tx % TILE_COLS_VECTORIZED
+   for i in range(NUM_ITERS):
+      for tx in range(ntx):
+         dst_index = thread_row[tx] * TILE_COLS_VECTORIZED + thread_col[tx]
+         idx = dst_index
+         dst_index = dst_index ^ ((dst_index & SWIZZLE_MASK_1) >> SWIZZLE_BITS_1)
+         dst_index = dst_index ^ ((dst_index & SWIZZLE_MASK_2) >> SWIZZLE_BITS_2)
+         # idx_s = idx ^ ((idx & 0b00011100000) >> 5)
+         print(f"{tx:03d}", f"{thread_row[tx]:02d}", f"{thread_col[tx]:02d}", f"{i:02d}", f"{idx:04d}", f"{idx:016b}", f"{dst_index:03d}", f"{dst_index:016b}")
+      for tx in range(ntx):
+         thread_row[tx] += ROW_STEP
+# swizzle4(256, 256)
+def swizzle5(ntx, smem_stride):
+   for tx in range(ntx):
+      logical_offset = (tx % 32) * smem_stride
+      swizzled_offset = logical_offset ^ ((logical_offset & 0b10000000) >> 4)
+      swizzled_offset = swizzled_offset ^ ((swizzled_offset & 0b1100000) >> 2)
+      print(f"{tx:03d}", f"{logical_offset:04d}", f"{logical_offset//8:03d}", f"{logical_offset:016b}", 
+            f"{swizzled_offset:04d}", f"{swizzled_offset//8:03d}", f"{swizzled_offset:016b}")
+
+swizzle5(32, 32)

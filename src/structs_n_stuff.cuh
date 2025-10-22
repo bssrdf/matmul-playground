@@ -78,6 +78,7 @@ struct KernelLogger
             cudaEventSynchronize(stop);
             cudaEventElapsedTime(&elapsed, start, stop);
             times.push_back(elapsed);
+            std::cout << elapsed << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
       double logKernelStats(const unsigned int M, const unsigned int N, const unsigned int K)

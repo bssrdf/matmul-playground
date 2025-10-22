@@ -54,7 +54,15 @@ __device__ __forceinline__ void ldmatrix_a(
       : "r"(src_addr + 96 * smem_stride_)
     );
 
+    if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
+       printf("Z %u, %u, %u \n", threadIdx.x, logical_offset, swizzled_offset);
+
+    if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
+       printf("A %u, %u \n", threadIdx.x, src_addr);
     src_addr ^= 0b10000;
+    unsigned int src_addr1 = cvta_to_shared_u32(src + (swizzled_offset ^ 0b10000));
+    if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
+       printf("B %u, %u, %u \n", threadIdx.x, src_addr, src_addr1);
     
     // 1
     asm volatile (
