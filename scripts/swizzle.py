@@ -209,10 +209,20 @@ def swizzle5(ntx, smem_stride):
 def swizzle6(ntx):
 
    for tx in range(32):
-      col = tx
-      row = tx
-      idx = row * tx + col 
-      col = col ^ ((idx & 0b111000) >> 3)
-      print(row, col)
+      row = 32
+      print(f"{tx:02d}", end=':')
+      # print(f"{tx:02d}",  f"{idx0:02d}", f"{idx0:016b}", f"{idx:02d}", f"{idx:016b}",)
+      for col in range(32):
+         idx = row * tx + col 
+         idx0 = idx
+         # idx = idx ^ ((idx & 0b1111100000) >> 5)
+         idx = col ^ tx
+         print(f"{idx%32:02d}", end=',')
+      print()
+
+idx = 32 * 1 + 5
+print(f"{idx:03d}", f"{idx:016b}")
+idx = 32 * 31 + 5
+print(f"{idx:03d}", f"{idx:016b}")
 
 swizzle6(32)      
