@@ -78,7 +78,7 @@ struct KernelLogger
             cudaEventSynchronize(stop);
             cudaEventElapsedTime(&elapsed, start, stop);
             times.push_back(elapsed);
-            std::cout << elapsed << std::endl;
+            // std::cout << elapsed << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
       double logKernelStats(const unsigned int M, const unsigned int N, const unsigned int K)
@@ -86,6 +86,7 @@ struct KernelLogger
         double avg_time_ms = std::accumulate(times.begin(), times.end(), 0.0) / times.size();
         double total_flops = 2.0 * M * N * K;
         double gflops_per_sec = (total_flops) / (avg_time_ms * 1.0e6);
+        std::cout << "average time spent:" << avg_time_ms << std::endl;
         times.clear();
         std::string info = std::to_string(M) + "x" + std::to_string(N) + "x" + std::to_string(K);
         logs.push_back(std::make_pair(info, gflops_per_sec));

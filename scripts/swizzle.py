@@ -187,18 +187,21 @@ def swizzle4(ntx, BM):
          dst_index = thread_row[tx] * TILE_COLS_VECTORIZED + thread_col[tx]
          idx = dst_index
          dst_index = dst_index ^ ((dst_index & SWIZZLE_MASK_1) >> SWIZZLE_BITS_1)
+         idx1 = dst_index
          dst_index = dst_index ^ ((dst_index & SWIZZLE_MASK_2) >> SWIZZLE_BITS_2)
          # idx_s = idx ^ ((idx & 0b00011100000) >> 5)
-         print(f"{tx:03d}", f"{thread_row[tx]:02d}", f"{thread_col[tx]:02d}", f"{i:02d}", f"{idx:04d}", f"{idx:016b}", f"{dst_index:03d}", f"{dst_index:016b}")
+         print(f"{tx:03d}", f"{thread_row[tx]:02d}", f"{thread_col[tx]:02d}", f"{i:02d}", 
+               f"{idx:04d}", f"{idx:016b}",f"{idx1:04d}", f"{idx1:016b}", f"{dst_index:03d}", f"{dst_index:016b}")
       for tx in range(ntx):
          thread_row[tx] += ROW_STEP
-# swizzle4(256, 256)
+swizzle4(256, 256)
 def swizzle5(ntx, smem_stride):
    for tx in range(ntx):
       logical_offset = (tx % 32) * smem_stride
       swizzled_offset = logical_offset ^ ((logical_offset & 0b10000000) >> 4)
       swizzled_offset = swizzled_offset ^ ((swizzled_offset & 0b1100000) >> 2)
       print(f"{tx:03d}", f"{logical_offset:04d}", f"{logical_offset//8:03d}", f"{logical_offset:016b}", 
-            f"{swizzled_offset:04d}", f"{swizzled_offset//8:03d}", f"{swizzled_offset:016b}")
+            f"{swizzled_offset:04d}", f"{swizzled_offset//8:03d}", f"{swizzled_offset:016b}", 
+            f"{((swizzled_offset*2)^ 0b10000)//2:03d}")
 
 swizzle5(32, 32)

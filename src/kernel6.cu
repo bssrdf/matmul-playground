@@ -16,13 +16,18 @@ __device__ __forceinline__ void ldmatrix_a(
   static_assert(mma_tiles_per_warp_k == 4, "mma_tiles_per_warp_k must be 4");
 
   uint32_t (&reg_) [mma_tiles_per_warp_m][mma_tiles_per_warp_k][2] = reinterpret_cast<uint32_t(&)[mma_tiles_per_warp_m][mma_tiles_per_warp_k][2]>(reg);
+  // the smem layout is |BM(256), BK(32)| in row major format. 
+  // the current warp e.g. (0, 0), loads |BM[0-128), BK[0-32)|
+  // each lane of each warp starts at the beginning of one row and all warps at the same warp_m loads the same row
+
   unsigned int logical_offset = (threadIdx.x % 32) * smem_stride;
   unsigned int swizzled_offset = logical_offset ^ ((logical_offset & 0b10000000) >> 4);
   swizzled_offset = swizzled_offset ^ ((swizzled_offset & 0b1100000) >> 2);
   uint32_t src_addr = cvta_to_shared_u32(src + swizzled_offset);
   constexpr unsigned int smem_stride_ = smem_stride * sizeof(half); // convert stride to bytes
-    
-    // 0
+
+  //each ldmatrix loads 4 8x8 matrices accounting for a total of 32 rows
+  // 0
     asm volatile (
       "ldmatrix.sync.aligned.m8n8.x4.shared.b16 "
       "{%0, %1, %2, %3}, [%4];"
@@ -54,15 +59,16 @@ __device__ __forceinline__ void ldmatrix_a(
       : "r"(src_addr + 96 * smem_stride_)
     );
 
-    if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
-       printf("Z %u, %u, %u \n", threadIdx.x, logical_offset, swizzled_offset);
+    // if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
+    //    printf("Z %u, %u, %u \n", threadIdx.x, logical_offset, swizzled_offset);
 
-    if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
-       printf("A %u, %u \n", threadIdx.x, src_addr);
-    src_addr ^= 0b10000;
-    unsigned int src_addr1 = cvta_to_shared_u32(src + (swizzled_offset ^ 0b10000));
-    if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
-       printf("B %u, %u, %u \n", threadIdx.x, src_addr, src_addr1);
+    // if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
+    //    printf("A %u, %u \n", threadIdx.x, src_addr);
+    src_addr ^= 0b10000;  // move 8 steps in BK dimension; 8 steps is 1000 and one 
+                          // more 0 added to account for half (2 bytes) addressing
+    // unsigned int src_addr1 = cvta_to_shared_u32(src + (swizzled_offset ^ 0b10000));
+    // if(threadIdx.x <= 1 && threadIdx.y == 0 &&  blockIdx.x == 0 && blockIdx.y ==0)
+    //    printf("B %u, %u, %u \n", threadIdx.x, src_addr, src_addr1);
     
     // 1
     asm volatile (
