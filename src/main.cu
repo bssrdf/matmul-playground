@@ -10,8 +10,8 @@
     void cublas_launch(sgemm_params device_sgemm_params, KernelLogger& timer, const unsigned int num_runs);
 
   int main(int argc, char **argv) {
-    // bool check_on_cpu = false;
-    bool check_on_cpu = true;
+    bool check_on_cpu = false;
+    // bool check_on_cpu = true;
     
     if (argc != 6) {
         std::cerr << "Usage: " << argv[0] << " <kernel_id> <num_iterations> <M> <N> <K>" << std::endl;

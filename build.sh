@@ -1,0 +1,1 @@
+nvcc src/kernel1.cu src/kernel2.cu src/kernel3.cu src/kernel4.cu src/kernel5.cu src/kernel6.cu src/cublas_benchmark.cu src/main.cu -Xptxas="-v" -std=c++17 --expt-relaxed-constexpr -m64 -lcublas -I/usr/local/cuda/include -L/usr/local/cuda/lib -arch=compute_75 -lineinfo -code=sm_75 -o runner
