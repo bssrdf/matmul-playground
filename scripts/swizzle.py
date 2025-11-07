@@ -237,21 +237,23 @@ def swizzle7(ntx, BN, WM, WN):
    MMA_N = 8 
    mma_tiles_per_warp_n = 8
    i = 0
-   for lane_id in range(32):
+   for lane_id in range(ntx):
       mma_row = lane_id // 4
       mma_col = lane_id % 4
       output_sts_addr = warp_m * WM * BN//2  + (mma_row * BN//2 + warp_n * WN//2  + mma_col * 2 +  
                          mma_m * MMA_M * BN // 2 + (mma_n - i * mma_tiles_per_warp_n//2) * MMA_N)
-      idx = output_sts_addr ^ ((output_sts_addr & 0b1110000000) >> 4)
-      # idx = output_sts_addr ^ ((output_sts_addr & 0b1110000000) >> 4)
+      idx0 = output_sts_addr ^ ((output_sts_addr & 0b110000000000) >> 9)
+      idx = idx0 ^ ((idx0 & 0b1110000000) >> 4)
       print(f"{lane_id:02d}", f"{output_sts_addr:04d}", f"{output_sts_addr//(BN//2):03d}", f"{(output_sts_addr//2)%32:02d}", f"{output_sts_addr:016b}",
             f"{idx:04d}", f"{idx//(BN//2):03d}", f"{(idx//2)%32:02d}", f"{idx:016b}")   
    subk = 0
    j = 0
-   for lane_id in range(ntx):  
-      output_lds_addr = warp_m * WM * BN//2 + lane_id * BN//2 + warp_n * WN//2 + subk*2 + j*32*BN//2
-      idx = output_lds_addr ^ ((output_lds_addr & 0b1110000000) >> 4)
-      print(f"{lane_id:02d}", f"{output_lds_addr:04d}", f"{output_lds_addr//(BN//2):03d}", f"{(output_lds_addr//2)%32:02d}", f"{output_lds_addr:016b}",
-            f"{idx:04d}", f"{idx//(BN//2):03d}", f"{(idx//2)%32:02d}", f"{idx:016b}")   
-
+   for j in range(4):
+      for lane_id in range(ntx):  
+         output_lds_addr = warp_m * WM * BN//2 + lane_id * BN//2 + warp_n * WN//2 + subk*2 + j*32*BN//2
+         idx0 = output_lds_addr ^ ((output_lds_addr &  0b110000000000) >> 9)
+         idx = idx0 ^ ((idx0 & 0b1110000000) >> 4)
+         # if lane_id % 8 == 0:
+         print(f"{lane_id:02d}", f"{output_lds_addr:04d}", f"{output_lds_addr//(BN//2):03d}", f"{(output_lds_addr//2)%32:02d}", f"{output_lds_addr:016b}",
+               f"{idx:04d}", f"{idx//(BN//2):03d}", f"{(idx//2)%32:02d}", f"{idx:016b}")   
 swizzle7(32, 256, 128,64)
