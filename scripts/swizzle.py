@@ -247,7 +247,6 @@ def swizzle7(ntx, BN, WM, WN):
       print(f"{lane_id:02d}", f"{output_sts_addr:04d}", f"{output_sts_addr//(BN//2):03d}", f"{(output_sts_addr//2)%32:02d}", f"{output_sts_addr:016b}",
             f"{idx:04d}", f"{idx//(BN//2):03d}", f"{(idx//2)%32:02d}", f"{idx:016b}")   
    subk = 0
-   j = 0
    for j in range(4):
       for lane_id in range(ntx):  
          output_lds_addr = warp_m * WM * BN//2 + lane_id * BN//2 + warp_n * WN//2 + subk*2 + j*32*BN//2
